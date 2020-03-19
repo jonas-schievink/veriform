@@ -207,13 +207,8 @@ pub fn decode(input: &mut &[u8]) -> Result<u64, Error> {
         u64::from_le_bytes(encoded) >> length
     };
 
-    // Ensure there are no superfluous leading (little-endian) zeros
-    if length == 1 || result >= (1 << (7 * (length - 1))) {
-        *input = &bytes[length..];
-        Ok(result)
-    } else {
-        Err(Error::LeadingZeroes)
-    }
+    *input = &bytes[length..];
+    Ok(result)
 }
 
 #[cfg(test)]
@@ -321,5 +316,17 @@ mod tests {
 
         let mut slice = [0xf0, 0x3b, 0xfc, 0xc3, 0x03].as_ref();
         assert_eq!(signed::decode(&mut slice).unwrap(), -0x0f0f_f0f0);
+    }
+
+    #[test]
+    fn issue_111() {
+        let mut slice = [0x04, 0xbb, 0x01].as_ref();
+        assert_eq!(decode(&mut slice).unwrap(), 123);
+
+        let mut slice = [0x08, 0xbb, 0x03, 0x01].as_ref();
+        assert_eq!(decode(&mut slice).unwrap(), 1063856);
+
+        let mut slice = [0x08, 0x00, 0x00, 0x01].as_ref();
+        assert_eq!(decode(&mut slice).unwrap(), 1048576);
     }
 }
