@@ -141,8 +141,8 @@ pub fn encoded_len(value: u64) -> usize {
     match value {
         0..=0x7f => 1,
         0x80..=0x3fff => 2,
-        0x4000..=0xfffff => 3,
-        0x10_0000..=0xfff_ffff => 4,
+        0x4000..=0x1f_ffff => 3,
+        0x20_0000..=0xfff_ffff => 4,
         0x1000_0000..=0x7_ffff_ffff => 5,
         0x8_0000_0000..=0x3ff_ffff_ffff => 6,
         0x400_0000_0000..=0x1_ffff_ffff_ffff => 7,
@@ -314,5 +314,12 @@ mod tests {
 
         let mut slice = [0xf0, 0x3b, 0xfc, 0xc3, 0x03].as_ref();
         assert_eq!(signed::decode(&mut slice).unwrap(), -0x0f0f_f0f0);
+    }
+
+    #[test]
+    fn roundtrip_problem() {
+        let x = encode(1048576);
+        let y = decode(&mut x.as_ref()).unwrap();
+        assert_eq!(y, 1048576);
     }
 }
